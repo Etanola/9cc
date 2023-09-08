@@ -1,0 +1,11 @@
+services:
+  lowlayerstudy:
+    build: .
+    image: lowlayerstudy
+    container_name: lowlayerstudy
+    restart: always
+    ports:
+      - 8008:8008
+    volumes: 
+      - /mnt/c/Users/Etano/Documents/Lowlayer:/home
+    tty: true
