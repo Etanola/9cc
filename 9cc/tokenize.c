@@ -90,16 +90,19 @@ Token *tokenize() {
     Token *cur = &head;
 
     while (*p) {
+        // whitespace
         if (isspace(*p)) {
             p++;
             continue;
         }
 
+        // new line
         if (startswith(p, "\\n")) {
             p+=2;
             continue;
         }
 
+        // identifier
         if (islower(*p)) {
             char *start = p;
             int len = 0;
@@ -109,10 +112,15 @@ Token *tokenize() {
             }
             char *buffer = (char *) malloc(len + 1);
             strncpy(buffer, start, len);
-            cur = new_token(TK_IDENT, cur, buffer, len);
+            if (buffer == "return") {
+                cur = new_token(TK_RETURN, cur, buffer, len);
+            } else {
+                cur = new_token(TK_IDENT, cur, buffer, len);
+            }
             continue;
         }
 
+        // two character operand
         if (startswith(p, "==") || 
             startswith(p, "!=") || 
             startswith(p, "<=") || 
@@ -122,11 +130,13 @@ Token *tokenize() {
                 continue;
         }
 
+        // one character operand
         if (strchr("+-*/()<>;=", *p)) {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
 
+        // number
         if (isdigit(*p)) {
             cur = new_token(TK_NUM, cur, p, 0);
             cur->val = strtol(p, &p, 10);
