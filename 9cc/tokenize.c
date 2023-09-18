@@ -73,7 +73,7 @@ Token *tokenize() {
             }
             char *buffer = (char *) malloc(len + 1);
             strncpy(buffer, start, len);
-            if (buffer == "return") {
+            if (!strcmp(buffer, "return")) {
                 cur = new_token(TK_RETURN, cur, buffer, len);
             } else {
                 cur = new_token(TK_IDENT, cur, buffer, len);
