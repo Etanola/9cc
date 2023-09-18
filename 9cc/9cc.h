@@ -42,6 +42,7 @@ struct Node {
     int offset;
 };
 
+// global variable
 extern char *user_input;
 
 extern Token *token;
@@ -58,6 +59,12 @@ bool consume(char *op);
 void expect(char *op);
 
 int expect_number();
+
+char expect_ident();
+
+bool at_ident();
+
+bool at_num();
 
 bool at_eof();
 
