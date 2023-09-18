@@ -105,7 +105,12 @@ Token *tokenize() {
             continue;
         }
 
-        if ('a' <= *p && *p <= 'z') {
+        if (startswith(p, "\\n")) {
+            p+=2;
+            continue;
+        }
+
+        if (islower(*p)) {
             cur = new_token(TK_IDENT, cur, p++, 1);
             continue;
         }
@@ -129,7 +134,7 @@ Token *tokenize() {
             cur->val = strtol(p, &p, 10);
             continue;
         }
-
+        
         error_at(p, "トークナイズできません");
     }
 

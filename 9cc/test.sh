@@ -54,5 +54,6 @@ assert 3 "a = 3;"
 assert 5 "j = 5;"
 assert 2 "a = b = 2;"
 assert 1 "0<1;"
+assert 12 "k = 10;\n k = m = 2 * 2 * 2;\n k + m / 2;"
 
 echo ok
