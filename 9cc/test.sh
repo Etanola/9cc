@@ -56,5 +56,6 @@ assert 2 "a = b = 2;"
 assert 1 "0<1;"
 assert 12 "k = 10;\n k = m = 2 * 2 * 2;\n k + m / 2;"
 assert 3 "foo = 3;"
+assert 6 "foo = 1;\n bar = 2 + 3;\n foo + bar;"
 
 echo ok

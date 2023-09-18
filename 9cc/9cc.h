@@ -1,6 +1,6 @@
 #include<stdbool.h>
 
-//トークンの種類
+// token struct
 typedef enum {
     TK_RESERVED, // 記号
     TK_IDENT,    // 識別子
@@ -18,6 +18,8 @@ struct Token {
     int len;
 };
 
+
+// node struct
 typedef enum {
     ND_ADD,    // +
     ND_SUB,    // -
@@ -42,25 +44,38 @@ struct Node {
     int offset;
 };
 
-// global variable
+
+// local variable struct
+typedef struct LVar LVar;
+
+struct LVar {
+    LVar *next;
+    char *name;
+    int len;
+    int offset;
+};
+
+
+// global variable extern
 extern char *user_input;
 
 extern Token *token;
 
 extern Node *code[100];
 
+extern LVar *locals;
+
+
 // user_input
 void error_at(char *loc, char *fmt, ...);
 
 void error(char *fmt, ...);
 
-bool consume(char *op);
+Token *consume();
 
-void expect(char *op);
+bool consume_op(char *op);
 
-int expect_number();
-
-char expect_ident();
+void expect_op(char *op);
 
 bool at_ident();
 
@@ -69,18 +84,26 @@ bool at_num();
 bool at_eof();
 
 
-// token
+
+// tokenize
 Token *new_token(Tokenkind kind, Token *cur, char *str, int len);
 
 bool startswith(char *p, char *q);
 
 Token *tokenize();
 
+
+// create node
 Node *new_node(Nodekind kind, Node *lhs, Node *rhs);
 
 Node *new_node_num(int val);
 
-// node
+Node *new_node_ident(Token *tok);
+
+LVar *find_lvar(Token *tok);
+
+// parse tree
+void parse();
 void program();
 Node *stmt();
 Node *expr();
@@ -92,4 +115,6 @@ Node *mul();
 Node *unary();
 Node *primary();
 
+// generate assembly
+void gen_lval(Node *node);
 void gen(Node *node);

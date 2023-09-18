@@ -31,7 +31,13 @@ void error(char *fmt, ...) {
     exit(1);
 }
 
-bool consume(char *op) {
+Token *consume() {
+    Token *tok = token;
+    token = token->next;
+    return tok;
+}
+
+bool consume_op(char *op) {
     if (token->kind != TK_RESERVED || 
         strlen(op) != token->len ||
         memcmp(token->str, op, token->len))
@@ -40,28 +46,12 @@ bool consume(char *op) {
     return true;
 }
 
-void expect(char *op) {
+void expect_op(char *op) {
     if (token->kind != TK_RESERVED || 
         strlen(op) != token->len ||
         memcmp(token->str, op, token->len))
         error_at(token->str, "'%c'ではありません", op);
     token = token->next;
-}
-
-int expect_number() {
-    if (token->kind != TK_NUM)
-        error_at(token->str, "数ではありません");
-    int val = token->val;
-    token = token->next;
-    return val;
-}
-
-char expect_ident() {
-    if (token->kind != TK_IDENT)
-        error_at(token->str, "識別子ではありません");
-    char ident = token->str[0];
-    token = token->next;
-    return ident;
 }
 
 bool at_ident() {
