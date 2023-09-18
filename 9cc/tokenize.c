@@ -31,45 +31,6 @@ void error(char *fmt, ...) {
     exit(1);
 }
 
-Token *consume() {
-    Token *tok = token;
-    token = token->next;
-    return tok;
-}
-
-bool consume_op(char *op) {
-    if (token->kind != TK_RESERVED || 
-        strlen(op) != token->len ||
-        memcmp(token->str, op, token->len))
-        return false;
-    token = token->next;
-    return true;
-}
-
-void expect_op(char *op) {
-    if (token->kind != TK_RESERVED || 
-        strlen(op) != token->len ||
-        memcmp(token->str, op, token->len))
-        error_at(token->str, "'%c'ではありません", op);
-    token = token->next;
-}
-
-bool at_ident() {
-    if (token->kind != TK_IDENT)
-        return false;
-    return true;
-}
-
-bool at_num() {
-    if (token->kind != TK_NUM)
-        return false;
-    return true;
-}
-
-bool at_eof() {
-    return token->kind == TK_EOF;
-}
-
 Token *new_token(Tokenkind kind, Token *cur, char *str, int len) {
     Token *tok = calloc(1, sizeof(Token));
     tok->kind = kind;

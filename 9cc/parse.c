@@ -19,6 +19,13 @@ Node *new_node(Nodekind kind, Node *lhs, Node *rhs) {
     return node;
 }
 
+Node *new_node_left(Nodekind kind, Node *lhs) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = kind;
+    node->lhs = lhs;
+    return node;
+}
+
 Node *new_node_num(int val) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_NUM;
@@ -53,6 +60,39 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
+// token control
+Token *consume() {
+    Token *tok = token;
+    token = token->next;
+    return tok;
+}
+
+bool at_kind(Tokenkind kind) {
+    if (token->kind != kind)
+        return false;
+    return true;
+}
+
+bool at_op(char *op) {
+    if (strlen(op) != token->len ||
+        memcmp(token->str, op, token->len))
+        return false;
+    return true;
+}
+
+void expect_kind(Tokenkind kind) {
+    if (token->kind != kind) {
+        error_at(token->str, "トークンの種類が異なります。expected:%d,but now:%d\n", kind, token->kind);
+    }
+}
+
+void expect_op(char *op) {
+    if (strlen(op) != token->len ||
+        memcmp(token->str, op, token->len))
+        error_at(token->str, "'%c'ではありません", op);
+}
+
+
 // parse tree
 void parse() {
     LVar *start = calloc(1, sizeof(LVar));
@@ -62,14 +102,22 @@ void parse() {
 
 void program() {
     int i = 0;
-    while (!at_eof())
+    while (!at_kind(TK_EOF))
         code[i++] = stmt();
     code[i] = NULL;
 }
 
 Node *stmt() {
-    Node *node = expr();
+    Node *node;
+    if (at_kind(TK_RETURN)) {
+        consume();
+        node = new_node_left(ND_RETURN, expr());
+    } else {
+        node = expr();
+    }
+    expect_kind(TK_RESERVED);
     expect_op(";");
+    consume();
     return node;
 }
 
@@ -80,8 +128,10 @@ Node *expr() {
 Node *assign() {
     Node *node = equality();
     
-    if (consume_op("="))
+    if (at_kind(TK_RESERVED) && at_op("=")) {
+        consume();
         node = new_node(ND_ASSIGN, node, assign());
+    }
     return node;
 }
 
@@ -89,12 +139,15 @@ Node *equality() {
     Node *node = relational();
 
     for (;;) {
-        if (consume_op("=="))
+        if (at_kind(TK_RESERVED) && at_op("==")){
+            consume();
             node = new_node(ND_EQ, node, relational());
-        else if(consume_op("!="))
+        } else if(at_kind(TK_RESERVED) && at_op("!=")) {
+            consume();
             node = new_node(ND_NE, node, relational());
-        else
+        } else {
             return node;
+        }
     }
 }
 
@@ -102,16 +155,21 @@ Node *relational() {
     Node *node = add();
 
     for (;;) {
-        if (consume_op("<"))
+        if (at_kind(TK_RESERVED) && at_op("<")) {
+            consume();
             node = new_node(ND_LT, node, add());
-        else if(consume_op("<="))
+        } else if (at_kind(TK_RESERVED) && at_op("<=")) {
+            consume();
             node = new_node(ND_LE, node, add());
-        else if(consume_op(">"))
+        } else if (at_kind(TK_RESERVED) && at_op(">")) {
+            consume();
             node = new_node(ND_LT, add(), node);
-        else if(consume_op(">="))
+        } else if (at_kind(TK_RESERVED) && at_op(">=")) {
+            consume();
             node = new_node(ND_LE, add(), node);
-        else
+        } else {
             return node;
+        }
     }
 }
 
@@ -119,12 +177,15 @@ Node *add() {
     Node *node = mul();
 
     for (;;) {
-        if (consume_op("+"))
+        if (at_kind(TK_RESERVED) && at_op("+")){
+            consume();
             node = new_node(ND_ADD, node, mul());
-        else if (consume_op("-"))
+        } else if (at_kind(TK_RESERVED) && at_op("-")) {
+            consume();
             node = new_node(ND_SUB, node, mul());
-        else
-            return node;    
+        } else {
+            return node;
+        }
     }
 }
 
@@ -132,35 +193,44 @@ Node *mul() {
     Node *node = unary();
 
     for (;;) {
-        if (consume_op("*"))
+        if (at_kind(TK_RESERVED) && at_op("*")) {
+            consume();
             node = new_node(ND_MUL, node, unary());
-        else if (consume_op("/"))
+        } else if (at_kind(TK_RESERVED) && at_op("/")) {
+            consume();
             node = new_node(ND_DIV, node, unary());
-        else
+        } else {
             return node;
+        }
     }
 }
 
 Node *unary() {
-    if (consume_op("+"))
+    if (at_kind(TK_RESERVED) && at_op("+")) {
+        consume();
         return primary();
-    else if (consume_op("-"))
+    } else if (at_kind(TK_RESERVED) && at_op("-")) {
+        consume();
         return new_node(ND_SUB, new_node_num(0), primary());
+    }
     return primary();
 }
 
 Node *primary() {
-    if (consume_op("(")) {
+    if (at_kind(TK_RESERVED) && at_op("(")) {
+        consume();
         Node *node = expr();
+        expect_kind(TK_RESERVED);
         expect_op(")");
+        consume();
         return node;
     }
 
-    if (at_ident()) {
+    if (at_kind(TK_IDENT)) {
         return new_node_ident(consume());
     }
 
-    if (at_num()) {
+    if (at_kind(TK_NUM)) {
         return new_node_num(consume()->val);
     }
 }

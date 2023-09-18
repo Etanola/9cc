@@ -16,6 +16,7 @@ assert() {
     fi
 }
 
+assert 1 "1;"
 assert 0 "0;"
 assert 42 "42;"
 assert 21 "5+20-4;"
@@ -58,7 +59,7 @@ assert 12 "k = 10;\n k = m = 2 * 2 * 2;\n k + m / 2;"
 assert 3 "foo = 3;"
 assert 6 "foo = 1;\n bar = 2 + 3;\n foo + bar;"
 
-#assert 14 "a = 3;\n b = 5 * 6 - 8;\n return a + b / 2;"
-#assert 5 "return 5;\n return 8;\n"
+# assert 14 "a = 3;\n b = 5 * 6 - 8;\n return a + b / 2;"
+# assert 5 "return 5;\n return 8;\n"
 
 echo ok

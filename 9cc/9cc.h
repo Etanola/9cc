@@ -75,16 +75,13 @@ void error(char *fmt, ...);
 
 Token *consume();
 
-bool consume_op(char *op);
+bool at_kind(Tokenkind kind);
+
+bool at_op(char *op);
+
+void expect_kind(Tokenkind kind);
 
 void expect_op(char *op);
-
-bool at_ident();
-
-bool at_num();
-
-bool at_eof();
-
 
 
 // tokenize
