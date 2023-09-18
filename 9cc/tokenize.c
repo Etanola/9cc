@@ -111,7 +111,15 @@ Token *tokenize() {
         }
 
         if (islower(*p)) {
-            cur = new_token(TK_IDENT, cur, p++, 1);
+            char *start = p;
+            int len = 0;
+            while (islower(*p)) {
+                len++;
+                p++;
+            }
+            char *buffer = (char *) malloc(len + 1);
+            strncpy(buffer, start, len);
+            cur = new_token(TK_IDENT, cur, buffer, len);
             continue;
         }
 
@@ -134,7 +142,7 @@ Token *tokenize() {
             cur->val = strtol(p, &p, 10);
             continue;
         }
-        
+
         error_at(p, "トークナイズできません");
     }
 
