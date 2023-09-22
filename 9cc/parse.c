@@ -52,6 +52,33 @@ Node *new_node_ident(Token *tok) {
     return node;
 }
 
+Node *new_node_if(Node *cond, Node *then, Node *els) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_IF;
+    node->cond = cond;
+    node->then = then;
+    node->els = els;
+    return node;
+}
+
+Node *new_node_while(Node *cond, Node *then) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_WHILE;
+    node->cond = cond;
+    node->then = then;
+    return node;
+}
+
+Node *new_node_for(Node *init, Node *cond, Node *inc, Node *then) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_FOR;
+    node->init = init;
+    node->cond = cond;
+    node->inc = inc;
+    node->then = then;
+    return node;
+}
+
 // local variable
 LVar *find_lvar(Token *tok) {
     for (LVar *var = locals; var; var = var->next)
@@ -108,16 +135,36 @@ void program() {
 }
 
 Node *stmt() {
-    Node *node;
+    Node *node; 
+
     if (at_kind(TK_RETURN)) {
         consume();
         node = new_node_left(ND_RETURN, expr());
+        expect_kind(TK_RESERVED);
+        expect_op(";");
+        consume();
+    } else if (at_kind(TK_IF)) {
+        consume();
+        expect_kind(TK_RESERVED);
+        expect_op("(");
+        consume();
+        Node *cond = expr();
+        expect_kind(TK_RESERVED);
+        expect_op(")");
+        consume();
+        Node *then = stmt();
+        Node *els = NULL;
+        if (at_kind(TK_ELSE)) {
+            consume();
+            els = stmt();
+        }
+        node = new_node_if(cond, then, els);
     } else {
         node = expr();
+        expect_kind(TK_RESERVED);
+        expect_op(";");
+        consume();
     }
-    expect_kind(TK_RESERVED);
-    expect_op(";");
-    consume();
     return node;
 }
 

@@ -75,6 +75,14 @@ Token *tokenize() {
             strncpy(buffer, start, len);
             if (!strcmp(buffer, "return")) {
                 cur = new_token(TK_RETURN, cur, buffer, len);
+            } else if (!strcmp(buffer, "if")){
+                cur = new_token(TK_IF, cur, buffer, len);
+            } else if (!strcmp(buffer, "else")){
+                cur = new_token(TK_ELSE, cur, buffer, len);
+            } else if (!strcmp(buffer, "while")){
+                cur = new_token(TK_WHILE, cur, buffer, len);
+            } else if (!strcmp(buffer, "for")){
+                cur = new_token(TK_FOR, cur, buffer, len);
             } else {
                 cur = new_token(TK_IDENT, cur, buffer, len);
             }
