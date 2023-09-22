@@ -159,6 +159,45 @@ Node *stmt() {
             els = stmt();
         }
         node = new_node_if(cond, then, els);
+    } else if (at_kind(TK_WHILE)) {
+        consume();
+        expect_kind(TK_RESERVED);
+        expect_op("(");
+        consume();
+        Node *cond = expr();
+        expect_kind(TK_RESERVED);
+        expect_op(")");
+        consume();
+        Node *then = stmt();
+        node = new_node_while(cond, then);
+    } else if (at_kind(TK_FOR)) {
+        consume();
+        expect_kind(TK_RESERVED);
+        expect_op("(");
+        consume();
+        Node *init = NULL;
+        Node *cond = NULL;
+        Node *inc = NULL;
+        if (!at_op(";")) {
+            init = expr();
+        }
+        expect_kind(TK_RESERVED);
+        expect_op(";");
+        consume();
+        if (!at_op(";")) {
+            cond = expr();
+        }
+        expect_kind(TK_RESERVED);
+        expect_op(";");
+        consume();
+        if (!at_op(")")) {
+            inc = expr();
+        }
+        expect_kind(TK_RESERVED);
+        expect_op(")");
+        consume();
+        Node *then = stmt();
+        node = new_node_for(init, cond, inc, then);
     } else {
         node = expr();
         expect_kind(TK_RESERVED);

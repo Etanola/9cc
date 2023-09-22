@@ -66,7 +66,7 @@ assert 5 "return 5;\n return 8;\n"
 assert 8 "a = 1;\n b = 3;\n if (a == b)\n return 5;\n else \n return 8;"
 assert 5 "a = 3;\n b = 3;\n if (a == b)\n return 5;\n else \n return 3;"
 assert 5 "a = 3;\n b = 3;\n if (a == b)\n a = a + 5;\n else \n b = b + 3;\n if (a != b)\n return 5;\n else return 10;"
-# assert 10 "i = 0;\n while (i<10)\n i++; \n return i;"
-# assert 3 "x = 0;\n for (i = 0;i < 3;i++)\n x++;\n return x;"
+assert 10 "i = 0;\n while (i < 10)\n i = i + 1; \n return i;"
+assert 3 "x = 0;\n for (i = 0;i < 3;i = i + 1)\n x = x + 1;\n return x;"
 
 echo ok

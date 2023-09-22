@@ -19,16 +19,18 @@ static int count(void) {
 
 void gen(Node *node) {
     switch(node->kind) {
-        case ND_NUM:
+        case ND_NUM: {
             printf("    push %d\n", node->val);
             return;
-        case ND_LVAR:
+        }
+        case ND_LVAR: {
             gen_lval(node);
             printf("    pop rax\n");
             printf("    mov rax, [rax]\n");
             printf("    push rax\n");
             return;
-        case ND_ASSIGN:
+        }
+        case ND_ASSIGN: {
             gen_lval(node->lhs);
             gen(node->rhs);
 
@@ -37,14 +39,16 @@ void gen(Node *node) {
             printf("    mov [rax], rdi\n");
             printf("    push rdi\n");
             return;
-        case ND_RETURN:
+        }
+        case ND_RETURN: {
             gen(node->lhs);
             printf("    pop rax\n");
             printf("    mov rsp, rbp\n");
             printf("    pop rbp\n");
             printf("    ret\n");
             return;
-        case ND_IF:
+        }
+        case ND_IF: {
             int c = count();
             gen(node->cond);
             printf("    pop rax\n");
@@ -57,6 +61,36 @@ void gen(Node *node) {
                 gen(node->els);
             printf(".Lend%d:\n", c);
             return;
+        }
+        case ND_WHILE: {
+            int c = count();
+            printf(".Lbegin%d:\n", c);
+            gen(node->cond);
+            printf("    pop rax\n");
+            printf("    cmp rax, 0\n");
+            printf("    je  .Lend%d\n", c);
+            gen(node->then);
+            printf("    jmp .Lbegin%d\n", c);
+            printf(".Lend%d:\n", c);
+            return;
+        }
+        case ND_FOR: {
+            int c = count();
+            if (node->init != NULL)
+                gen(node->init);
+            printf(".Lbegin%d:\n", c);
+            if (node->cond != NULL)
+                gen(node->cond);
+            printf("    pop rax\n");
+            printf("    cmp rax, 0\n");
+            printf("    je  .Lend%d\n", c);
+            gen(node->then);
+            if (node->inc != NULL)
+                gen(node->inc);
+            printf("    jmp .Lbegin%d\n", c);
+            printf(".Lend%d:\n", c);
+            return;
+        }
 
         default:
             break;
