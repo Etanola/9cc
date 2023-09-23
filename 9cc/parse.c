@@ -294,14 +294,20 @@ Node *mul() {
 }
 
 Node *unary() {
-    if (at_kind(TK_RESERVED) && at_op("+")) {
-        consume();
+    int sign  = 1; // 1:+, 0:-
+    while(at_op("+") || at_op("-")) {
+        if (at_op("+")) {
+            consume();
+        } else if (at_op("-")) {
+            consume();
+            sign = 1 - sign;
+        }
+    }
+    if (sign == 1) {
         return primary();
-    } else if (at_kind(TK_RESERVED) && at_op("-")) {
-        consume();
+    } else if (sign == 0) {
         return new_node(ND_SUB, new_node_num(0), primary());
     }
-    return primary();
 }
 
 Node *primary() {
