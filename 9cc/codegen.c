@@ -37,8 +37,9 @@ void gen_stmt(Node *node) {
             gen_stmt(node->then);
             printf("    jmp .Lend%d\n", c);
             printf(".Lelse%d:\n", c);
-            if (node->els != NULL)
+            if (node->els != NULL) {
                 gen_stmt(node->els);
+            }
             printf(".Lend%d:\n", c);
             return;
         }
@@ -57,19 +58,22 @@ void gen_stmt(Node *node) {
         }
         case ND_FOR: {
             int c = count();
-            if (node->init != NULL)
+            if (node->init != NULL) {
                 gen_expr(node->init);
                 printf("    pop rax\n");
+            }
             printf(".Lbegin%d:\n", c);
-            if (node->cond != NULL)
+            if (node->cond != NULL) {
                 gen_expr(node->cond);
+            }
             printf("    pop rax\n");
             printf("    cmp rax, 0\n");
             printf("    je  .Lend%d\n", c);
             gen_stmt(node->then);
-            if (node->inc != NULL)
+            if (node->inc != NULL) {
                 gen_expr(node->inc);
                 printf("    pop rax\n");
+            }
             printf("    jmp .Lbegin%d\n", c);
             printf(".Lend%d:\n", c);
             printf("    push rax\n"); // stmtは最後にスタックトップに値を入れる
