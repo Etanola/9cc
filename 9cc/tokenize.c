@@ -67,7 +67,7 @@ Token *tokenize() {
         if (islower(*p)) {
             char *start = p;
             int len = 0;
-            while (islower(*p)) {
+            while (islower(*p) || isdigit(*p)) {
                 len++;
                 p++;
             }
