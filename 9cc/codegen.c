@@ -17,7 +17,79 @@ static int count(void) {
     return i++;
 }
 
-void gen(Node *node) {
+// stmtは値を最終値をpushする
+void gen_stmt(Node *node) {
+    switch(node->kind) {
+        case ND_RETURN: {
+            gen_expr(node->ret);
+            printf("    pop rax\n");
+            printf("    mov rsp, rbp\n");
+            printf("    pop rbp\n");
+            printf("    ret\n");
+            return;
+        }
+        case ND_IF: {
+            int c = count();
+            gen_expr(node->cond);
+            printf("    pop rax\n");
+            printf("    cmp rax, 0\n");
+            printf("    je  .Lelse%d\n", c);
+            gen_stmt(node->then);
+            printf("    jmp .Lend%d\n", c);
+            printf(".Lelse%d:\n", c);
+            if (node->els != NULL)
+                gen_stmt(node->els);
+            printf(".Lend%d:\n", c);
+            return;
+        }
+        case ND_WHILE: {
+            int c = count();
+            printf(".Lbegin%d:\n", c);
+            gen_expr(node->cond);
+            printf("    pop rax\n");
+            printf("    cmp rax, 0\n");
+            printf("    je  .Lend%d\n", c);
+            gen_stmt(node->then);
+            printf("    jmp .Lbegin%d\n", c);
+            printf(".Lend%d:\n", c);
+            printf("    push rax\n"); // stmtは最後にスタックトップに値を入れる
+            return;
+        }
+        case ND_FOR: {
+            int c = count();
+            if (node->init != NULL)
+                gen_expr(node->init);
+                printf("    pop rax\n");
+            printf(".Lbegin%d:\n", c);
+            if (node->cond != NULL)
+                gen_expr(node->cond);
+            printf("    pop rax\n");
+            printf("    cmp rax, 0\n");
+            printf("    je  .Lend%d\n", c);
+            gen_stmt(node->then);
+            if (node->inc != NULL)
+                gen_expr(node->inc);
+                printf("    pop rax\n");
+            printf("    jmp .Lbegin%d\n", c);
+            printf(".Lend%d:\n", c);
+            printf("    push rax\n"); // stmtは最後にスタックトップに値を入れる
+            return;
+        }
+        case ND_BLOCK: {
+            for (int i = 0;node->stmt[i];i++) {
+                gen_stmt(node->stmt[i]);
+                printf("    pop rax\n");
+            }
+            printf("    push rax\n");
+            return;
+        }
+
+        default:
+            gen_expr(node);
+    }
+}
+
+void gen_expr(Node *node) {
     switch(node->kind) {
         case ND_NUM: {
             printf("    push %d\n", node->val);
@@ -32,7 +104,7 @@ void gen(Node *node) {
         }
         case ND_ASSIGN: {
             gen_lval(node->lhs);
-            gen(node->rhs);
+            gen_expr(node->rhs);
 
             printf("    pop rdi\n");
             printf("    pop rax\n");
@@ -40,64 +112,13 @@ void gen(Node *node) {
             printf("    push rdi\n");
             return;
         }
-        case ND_RETURN: {
-            gen(node->lhs);
-            printf("    pop rax\n");
-            printf("    mov rsp, rbp\n");
-            printf("    pop rbp\n");
-            printf("    ret\n");
-            return;
-        }
-        case ND_IF: {
-            int c = count();
-            gen(node->cond);
-            printf("    pop rax\n");
-            printf("    cmp rax, 0\n");
-            printf("    je  .Lelse%d\n", c);
-            gen(node->then);
-            printf("    jmp .Lend%d\n", c);
-            printf(".Lelse%d:\n", c);
-            if (node->els != NULL)
-                gen(node->els);
-            printf(".Lend%d:\n", c);
-            return;
-        }
-        case ND_WHILE: {
-            int c = count();
-            printf(".Lbegin%d:\n", c);
-            gen(node->cond);
-            printf("    pop rax\n");
-            printf("    cmp rax, 0\n");
-            printf("    je  .Lend%d\n", c);
-            gen(node->then);
-            printf("    jmp .Lbegin%d\n", c);
-            printf(".Lend%d:\n", c);
-            return;
-        }
-        case ND_FOR: {
-            int c = count();
-            if (node->init != NULL)
-                gen(node->init);
-            printf(".Lbegin%d:\n", c);
-            if (node->cond != NULL)
-                gen(node->cond);
-            printf("    pop rax\n");
-            printf("    cmp rax, 0\n");
-            printf("    je  .Lend%d\n", c);
-            gen(node->then);
-            if (node->inc != NULL)
-                gen(node->inc);
-            printf("    jmp .Lbegin%d\n", c);
-            printf(".Lend%d:\n", c);
-            return;
-        }
 
         default:
             break;
     }
 
-    gen(node->lhs);
-    gen(node->rhs);
+    gen_expr(node->lhs);
+    gen_expr(node->rhs);
 
     printf("    pop rdi\n");
     printf("    pop rax\n");
@@ -142,4 +163,26 @@ void gen(Node *node) {
     }
 
     printf("    push rax\n");
+}
+
+
+void codegen() {
+    printf(".intel_syntax noprefix\n");
+    printf(".globl main\n");
+    printf("main:\n");
+    
+    // プロローグ
+    printf("    push rbp\n");
+    printf("    mov rbp, rsp\n");
+    printf("    sub rsp, 208\n");
+
+    for (int i=0; code[i]; i++) {
+        gen_stmt(code[i]);
+        printf("    pop rax\n");
+    }
+
+    // エピローグ
+    printf("    mov rsp, rbp\n");
+    printf("    pop rbp\n");
+    printf("    ret\n");
 }

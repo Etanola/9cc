@@ -41,6 +41,7 @@ typedef enum {
     ND_IF,     // if
     ND_WHILE,  // while
     ND_FOR,    // for
+    ND_BLOCK   // ブロック
 } Nodekind;
 
 typedef struct Node Node;
@@ -50,11 +51,15 @@ struct Node {
     Node *lhs;
     Node *rhs;
 
+    Node *ret;  //return文
+
     Node *cond; //制御構文の条件式
     Node *then; //制御構文の実行式
     Node *els;  //if文のelse時の実行式
     Node *init; //for文の初期化式
     Node *inc;  //for文のループ式
+
+    Node *stmt[100];
 
     int val;
     int offset;
@@ -87,33 +92,9 @@ void error_at(char *loc, char *fmt, ...);
 
 void error(char *fmt, ...);
 
-Token *consume();
-
-bool at_kind(Tokenkind kind);
-
-bool at_op(char *op);
-
-void expect_kind(Tokenkind kind);
-
-void expect_op(char *op);
-
 
 // tokenize
-Token *new_token(Tokenkind kind, Token *cur, char *str, int len);
-
-bool startswith(char *p, char *q);
-
 Token *tokenize();
-
-
-// create node
-Node *new_node(Nodekind kind, Node *lhs, Node *rhs);
-
-Node *new_node_num(int val);
-
-Node *new_node_ident(Token *tok);
-
-LVar *find_lvar(Token *tok);
 
 // parse tree
 void parse();
@@ -129,6 +110,6 @@ Node *unary();
 Node *primary();
 
 // generate assembly
-void gen_lval(Node *node);
-static int count(void);
-void gen(Node *node);
+void gen_expr(Node *node);
+void gen_stmt(Node *node);
+void codegen();

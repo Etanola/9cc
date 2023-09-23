@@ -19,10 +19,10 @@ Node *new_node(Nodekind kind, Node *lhs, Node *rhs) {
     return node;
 }
 
-Node *new_node_left(Nodekind kind, Node *lhs) {
+Node *new_node_ret(Node *ret) {
     Node *node = calloc(1, sizeof(Node));
-    node->kind = kind;
-    node->lhs = lhs;
+    node->kind = ND_RETURN;
+    node->ret = ret;
     return node;
 }
 
@@ -31,6 +31,14 @@ Node *new_node_num(int val) {
     node->kind = ND_NUM;
     node->val = val;
     return node;
+}
+
+// local variable
+LVar *find_lvar(Token *tok) {
+    for (LVar *var = locals; var; var = var->next)
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+            return var;
+    return NULL;
 }
 
 Node *new_node_ident(Token *tok) {
@@ -79,12 +87,9 @@ Node *new_node_for(Node *init, Node *cond, Node *inc, Node *then) {
     return node;
 }
 
-// local variable
-LVar *find_lvar(Token *tok) {
-    for (LVar *var = locals; var; var = var->next)
-        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
-            return var;
-    return NULL;
+Node *append_stmt(Node *node, Node *stmt, int i) {
+    node->stmt[i] = stmt;
+    return node;
 }
 
 // token control
@@ -139,17 +144,14 @@ Node *stmt() {
 
     if (at_kind(TK_RETURN)) {
         consume();
-        node = new_node_left(ND_RETURN, expr());
-        expect_kind(TK_RESERVED);
+        node = new_node_ret(expr());
         expect_op(";");
         consume();
     } else if (at_kind(TK_IF)) {
         consume();
-        expect_kind(TK_RESERVED);
         expect_op("(");
         consume();
         Node *cond = expr();
-        expect_kind(TK_RESERVED);
         expect_op(")");
         consume();
         Node *then = stmt();
@@ -161,18 +163,15 @@ Node *stmt() {
         node = new_node_if(cond, then, els);
     } else if (at_kind(TK_WHILE)) {
         consume();
-        expect_kind(TK_RESERVED);
         expect_op("(");
         consume();
         Node *cond = expr();
-        expect_kind(TK_RESERVED);
         expect_op(")");
         consume();
         Node *then = stmt();
         node = new_node_while(cond, then);
     } else if (at_kind(TK_FOR)) {
         consume();
-        expect_kind(TK_RESERVED);
         expect_op("(");
         consume();
         Node *init = NULL;
@@ -181,26 +180,29 @@ Node *stmt() {
         if (!at_op(";")) {
             init = expr();
         }
-        expect_kind(TK_RESERVED);
         expect_op(";");
         consume();
         if (!at_op(";")) {
             cond = expr();
         }
-        expect_kind(TK_RESERVED);
         expect_op(";");
         consume();
         if (!at_op(")")) {
             inc = expr();
         }
-        expect_kind(TK_RESERVED);
         expect_op(")");
         consume();
         Node *then = stmt();
         node = new_node_for(init, cond, inc, then);
+    } else if (at_op("{")) {
+        consume();
+        node = new_node(ND_BLOCK, NULL, NULL);
+        for (int i = 0;!at_op("}");i++) {
+            node = append_stmt(node,  stmt(), i);
+        }
+        consume();
     } else {
         node = expr();
-        expect_kind(TK_RESERVED);
         expect_op(";");
         consume();
     }
