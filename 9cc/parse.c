@@ -134,8 +134,9 @@ void parse() {
 
 void program() {
     int i = 0;
-    while (!at_kind(TK_EOF))
+    while (!at_kind(TK_EOF)) {
         code[i++] = stmt();
+    }
     code[i] = NULL;
 }
 
@@ -202,9 +203,14 @@ Node *stmt() {
         }
         consume();
     } else {
-        node = expr();
-        expect_op(";");
-        consume();
+        if (at_op(";")) {
+            consume();
+            node = new_node(ND_BLOCK, NULL, NULL);
+        } else {
+            node = expr();
+            expect_op(";");
+            consume();
+        }
     }
     return node;
 }

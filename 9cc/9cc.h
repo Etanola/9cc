@@ -41,7 +41,7 @@ typedef enum {
     ND_IF,     // if
     ND_WHILE,  // while
     ND_FOR,    // for
-    ND_BLOCK   // ブロック
+    ND_BLOCK,  // ブロック
 } Nodekind;
 
 typedef struct Node Node;
