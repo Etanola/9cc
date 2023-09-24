@@ -73,6 +73,7 @@ typedef struct LVar LVar;
 
 struct LVar {
     LVar *next;
+    Nodekind kind;
     char *name;
     int len;
     int offset;
@@ -86,7 +87,7 @@ extern Token *token;
 
 extern Node *code[100];
 
-extern LVar *locals;
+extern LVar *idents;
 
 
 // user_input

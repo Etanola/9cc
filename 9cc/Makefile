@@ -1,5 +1,7 @@
 CFLAGS=-std=c11 -g -static
-SRCS=$(wildcard *.c)
+SRC_FILES=$(wildcard *.c)
+EXCLUDE_FILES=func.c
+SRCS=$(filter-out $(EXCLUDE_FILES), $(SRC_FILES))
 OBJS=$(SRCS:.c=.o)
 
 9cc: $(OBJS)

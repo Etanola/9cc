@@ -8,7 +8,7 @@
 
 Node *code[100];
 
-LVar *locals;
+LVar *idents;
 
 // create node
 Node *new_node(Nodekind kind, Node *lhs, Node *rhs) {
@@ -33,11 +33,11 @@ Node *new_node_num(int val) {
     return node;
 }
 
-// local variable
-LVar *find_lvar(Token *tok) {
-    for (LVar *var = locals; var; var = var->next)
-        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
-            return var;
+// ident
+LVar *find_ident(Token *tok) {
+    for (LVar *ident = idents; ident; ident = ident->next)
+        if (ident->len == tok->len && !memcmp(tok->str, ident->name, ident->len))
+            return ident;
     return NULL;
 }
 
@@ -50,17 +50,21 @@ Node *new_node_ident(Token *tok, bool func) {
     }
     node->str = tok->str;
 
-    LVar *lvar = find_lvar(tok);
-    if (lvar) {
-        node->offset = lvar->offset;
+    LVar *ident = find_ident(tok);
+    if (ident) {
+        if (ident->kind != node->kind) {
+            error_at(token->str, "ローカル変数名と関数名が競合しています");
+        }
+        node->offset = ident->offset;
     } else {
-        lvar = calloc(1, sizeof(LVar));
-        lvar->next = locals;
-        lvar->name = tok->str;
-        lvar->len = tok->len;
-        lvar->offset = locals->offset + 8;
-        node->offset = lvar->offset;
-        locals = lvar;
+        ident = calloc(1, sizeof(LVar));
+        ident->next = idents;
+        ident->kind = node->kind;
+        ident->name = tok->str;
+        ident->len = tok->len;
+        ident->offset = idents->offset + 8;
+        node->offset = ident->offset;
+        idents = ident;
     }
     return node;
 }
@@ -133,7 +137,7 @@ void expect_op(char *op) {
 // parse tree
 void parse() {
     LVar *start = calloc(1, sizeof(LVar));
-    locals = start;
+    idents = start;
     program();
 }
 

@@ -184,7 +184,6 @@ void codegen() {
     // プロローグ
     printf("    push rbp\n");
     printf("    mov rbp, rsp\n");
-    printf("    sub rsp, 208\n");
 
     for (int i=0; code[i]; i++) {
         gen_stmt(code[i]);

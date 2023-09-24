@@ -11,6 +11,6 @@ assert() {
     echo "$actual!!!!!"
 }
 
-assert "return foo();"
+assert "foos = 3;\n return foo();"
 
 echo ok
