@@ -41,9 +41,14 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
-Node *new_node_ident(Token *tok) {
+Node *new_node_ident(Token *tok, bool func) {
     Node *node = calloc(1, sizeof(Node));
-    node->kind = ND_LVAR;
+    if (func) {
+        node->kind = ND_FUNC;
+    } else {
+        node->kind = ND_LVAR;
+    }
+    node->str = tok->str;
 
     LVar *lvar = find_lvar(tok);
     if (lvar) {
@@ -327,7 +332,14 @@ Node *primary() {
     }
 
     if (at_kind(TK_IDENT)) {
-        return new_node_ident(consume());
+        Token *tok = consume();
+        if (at_op("(")) {
+            consume();
+            expect_op(")");
+            consume();
+            return new_node_ident(tok, true);
+        }
+        return new_node_ident(tok, false);
     }
 
     if (at_kind(TK_NUM)) {

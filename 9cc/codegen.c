@@ -3,6 +3,7 @@
 #include<stdio.h>
 #include"9cc.h"
 
+// ローカル変数ノードに入っている値をraxにpush
 void gen_lval(Node *node) {
     if (node->kind != ND_LVAR)
         error("代入の左辺値が変数ではありません");
@@ -114,6 +115,11 @@ void gen_expr(Node *node) {
             printf("    pop rax\n");
             printf("    mov [rax], rdi\n");
             printf("    push rdi\n");
+            return;
+        }
+        case ND_FUNC: {
+            printf("    call %s\n", node->str);
+            printf("    push rax\n"); // callで呼んだ関数の返り値をpushする
             return;
         }
 

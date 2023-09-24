@@ -42,6 +42,7 @@ typedef enum {
     ND_WHILE,  // while
     ND_FOR,    // for
     ND_BLOCK,  // ブロック
+    ND_FUNC,   // 関数
 } Nodekind;
 
 typedef struct Node Node;
@@ -62,6 +63,7 @@ struct Node {
     Node *stmt[100];
 
     int val;
+    char *str;
     int offset;
 };
 
