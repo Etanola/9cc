@@ -207,6 +207,7 @@ void codegen() {
     // プロローグ
     printf("    push rbp\n");
     printf("    mov rbp, rsp\n");
+    printf("    sub rsp, 208\n"); // 変数26個分の領域を確保
 
     for (int i=0; code[i]; i++) {
         gen_stmt(code[i]);
