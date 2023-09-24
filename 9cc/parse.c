@@ -338,10 +338,15 @@ Node *primary() {
     if (at_kind(TK_IDENT)) {
         Token *tok = consume();
         if (at_op("(")) {
+            Node *node = new_node_ident(tok, true);
             consume();
+            node->args[0] = new_node_num(consume()->val);
+            expect_op(",");
+            consume();
+            node->args[1] = new_node_num(consume()->val);
             expect_op(")");
             consume();
-            return new_node_ident(tok, true);
+            return node;
         }
         return new_node_ident(tok, false);
     }

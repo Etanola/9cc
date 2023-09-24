@@ -118,8 +118,31 @@ void gen_expr(Node *node) {
             return;
         }
         case ND_FUNC: {
+            int c = count();
+            gen_expr(node->args[0]);
+            gen_expr(node->args[1]);
+            printf("    pop rsi\n");
+            printf("    pop rdi\n");
+
+            // rspが16の倍数になるように調整
+            printf("    mov rax, rsp\n");
+            printf("    and rax, 15\n");
+            printf("    cmp rax, 0\n");
+            printf("    jne .Lcall%d\n", c);
+
             printf("    call %s\n", node->str);
             printf("    push rax\n"); // callで呼んだ関数の返り値をpushする
+            printf("    jmp .Lend%d\n", c);
+
+            printf(".Lcall%d:\n", c);
+            printf("    sub rsp, 8\n");
+            printf("    mov rax, 0\n");
+            printf("    call %s\n", node->str);
+            printf("    push rax\n"); // callで呼んだ関数の返り値をpushする
+            printf("    add rsp, 8\n");
+            
+            printf(".Lend%d:\n", c);
+
             return;
         }
 

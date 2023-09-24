@@ -60,7 +60,9 @@ struct Node {
     Node *init; //for文の初期化式
     Node *inc;  //for文のループ式
 
-    Node *stmt[100];
+    Node *stmt[100]; // 複文を入れる
+
+    Node *args[5]; // ND_FUNCの時の引数
 
     int val;
     char *str;
