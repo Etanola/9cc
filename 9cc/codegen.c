@@ -68,10 +68,10 @@ void gen_stmt(Node *node) {
             printf(".Lbegin%d:\n", c);
             if (node->cond != NULL) {
                 gen_expr(node->cond);
+                printf("    pop rax\n");
+                printf("    cmp rax, 0\n");
+                printf("    je  .Lend%d\n", c);
             }
-            printf("    pop rax\n");
-            printf("    cmp rax, 0\n");
-            printf("    je  .Lend%d\n", c);
             gen_stmt(node->then);
             if (node->inc != NULL) {
                 gen_expr(node->inc);
