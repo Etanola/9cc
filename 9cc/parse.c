@@ -340,12 +340,17 @@ Node *primary() {
         if (at_op("(")) {
             Node *node = new_node_ident(tok, true);
             consume();
-            node->args[0] = new_node_num(consume()->val);
-            expect_op(",");
+            int i = 0;
+            while(!at_op(")")){
+                node->args[i] = new_node_num(consume()->val);
+                i++;
+                if(at_op(")")) break;
+                fprintf(stderr, "%d\n", i);
+                expect_op(",");
+                consume();
+            }
             consume();
-            node->args[1] = new_node_num(consume()->val);
-            expect_op(")");
-            consume();
+            node->num_args = i;
             return node;
         }
         return new_node_ident(tok, false);

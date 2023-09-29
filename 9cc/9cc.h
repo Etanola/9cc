@@ -63,6 +63,7 @@ struct Node {
     Node *stmt[100]; // 複文を入れる
 
     Node *args[5]; // ND_FUNCの時の引数
+    int num_args;
 
     int val;
     char *str;

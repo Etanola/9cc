@@ -3,6 +3,8 @@
 #include<stdio.h>
 #include"9cc.h"
 
+char *args_reg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
 // ローカル変数ノードに入っている値をraxにpush
 void gen_lval(Node *node) {
     if (node->kind != ND_LVAR)
@@ -119,10 +121,12 @@ void gen_expr(Node *node) {
         }
         case ND_FUNC: {
             int c = count();
-            gen_expr(node->args[0]);
-            gen_expr(node->args[1]);
-            printf("    pop rsi\n");
-            printf("    pop rdi\n");
+            for(int i = 0;i < node->num_args; i++) {
+                gen_expr(node->args[i]);
+            }
+            for(int i = 0;i < node->num_args; i++) {
+                printf("    pop %s\n", args_reg[i]);
+            }
 
             // rspが16の倍数になるように調整
             printf("    mov rax, rsp\n");
