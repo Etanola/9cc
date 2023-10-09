@@ -20,7 +20,7 @@ static int count(void) {
     return i++;
 }
 
-// stmtは値を最終値をpushする
+// stmtは最終値をraxにpushしない
 void gen_stmt(Node *node) {
     switch(node->kind) {
         case ND_RETURN: {
@@ -56,7 +56,6 @@ void gen_stmt(Node *node) {
             gen_stmt(node->then);
             printf("    jmp .Lbegin%d\n", c);
             printf(".Lend%d:\n", c);
-            printf("    push rax\n"); // stmtは最後にスタックトップに値を入れる
             return;
         }
         case ND_FOR: {
@@ -79,23 +78,22 @@ void gen_stmt(Node *node) {
             }
             printf("    jmp .Lbegin%d\n", c);
             printf(".Lend%d:\n", c);
-            printf("    push rax\n"); // stmtは最後にスタックトップに値を入れる
             return;
         }
         case ND_BLOCK: {
             for (int i = 0;node->stmt[i];i++) {
                 gen_stmt(node->stmt[i]);
-                printf("    pop rax\n");
             }
-            printf("    push rax\n");
             return;
         }
 
         default:
             gen_expr(node);
+            printf("    pop rax\n");
     }
 }
 
+// exprは最終値をraxにpushする
 void gen_expr(Node *node) {
     switch(node->kind) {
         case ND_NUM: {
@@ -215,7 +213,6 @@ void codegen() {
 
     for (int i=0; code[i]; i++) {
         gen_stmt(code[i]);
-        printf("    pop rax\n");
     }
 
     // エピローグ

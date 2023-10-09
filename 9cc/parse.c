@@ -141,6 +141,7 @@ void parse() {
     program();
 }
 
+// program = stmt*
 void program() {
     int i = 0;
     while (!at_kind(TK_EOF)) {
@@ -148,6 +149,14 @@ void program() {
     }
     code[i] = NULL;
 }
+
+/*
+stmt = "return" expr ";"
+     | "if" "(" expr ")" stmt ("else" stmt) ?
+     | "while" "(" expr ")" stmt
+     | "for" "(" expr? ";" expr? ";" expr? ")" stmt
+     | "{" stmt* "}"
+*/
 
 Node *stmt() {
     Node *node; 
@@ -214,7 +223,7 @@ Node *stmt() {
     } else {
         if (at_op(";")) {
             consume();
-            node = new_node(ND_BLOCK, NULL, NULL);
+            node = new_node(ND_BLOCK, NULL, NULL); // ";" = "{};"としてcodegenで処理する。
         } else {
             node = expr();
             expect_op(";");
