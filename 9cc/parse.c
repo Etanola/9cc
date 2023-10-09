@@ -8,7 +8,7 @@
 
 Node *code[100];
 
-LVar *idents;
+IdLink *idents;
 
 // create node
 Node *new_node(Nodekind kind, Node *lhs, Node *rhs) {
@@ -33,27 +33,31 @@ Node *new_node_num(int val) {
     return node;
 }
 
-// ident
-LVar *find_ident(Token *tok) {
-    for (LVar *ident = idents; ident; ident = ident->next)
+// 識別子リストから識別子を検索する
+IdLink *find_ident(Token *tok, IdLink *idents) {
+    for (IdLink *ident = idents; ident; ident = ident->next)
         if (ident->len == tok->len && !memcmp(tok->str, ident->name, ident->len))
             return ident;
     return NULL;
 }
 
+// 関数のノードを作成する
 Node *new_node_ident(Token *tok, Nodekind kind) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
     node->str = tok->str;
-
-    LVar *ident = find_ident(tok);
+    
+    IdLink *ident = find_ident(tok, idents);
     if (ident) {
-        if (ident->kind != node->kind) {
-            error_at(token->str, "ローカル変数名と関数名が競合しています");
+        if (node->kind == ND_LVAR && (ident->kind == ND_FUNC_CALL || ident->kind == ND_FUNC_DEF)) {
+            error_at(token->str, "ローカル変数名が関数名と競合しています");
+        }
+        if ((node->kind == ND_FUNC_CALL || node->kind == ND_FUNC_DEF) && ident->kind == ND_LVAR) {
+            error_at(token->str, "関数名がローカル変数名と競合しています");
         }
         node->offset = ident->offset;
     } else {
-        ident = calloc(1, sizeof(LVar));
+        ident = calloc(1, sizeof(IdLink));
         ident->next = idents;
         ident->kind = node->kind;
         ident->name = tok->str;
@@ -62,6 +66,7 @@ Node *new_node_ident(Token *tok, Nodekind kind) {
         node->offset = ident->offset;
         idents = ident;
     }
+
     return node;
 }
 
@@ -132,8 +137,7 @@ void expect_op(char *op) {
 
 // parse tree
 void parse() {
-    LVar *start = calloc(1, sizeof(LVar));
-    idents = start;
+    idents = calloc(1, sizeof(IdLink));
     program();
 }
 
@@ -141,24 +145,42 @@ void parse() {
 void program() {
     int i = 0;
     while (!at_kind(TK_EOF)) {
-        code[i++] = stmt();
+        code[i++] = function();
     }
     code[i] = NULL;
 }
 
 // function = ident ("(" (ident ("," ident)*)? ")") "{" stmt* "}"
-// Node *function() {
-//     Node *node;
-//     expect_kind(TK_IDENT);
-//     node = new_node_ident(consume(), true);
-//     expect_op("(");
-//     consume();
-//     if (at_kind(TK_IDENT)) {
-//         node->args_def;
-//     }
-//     expect_op(")");
-//     consume();
-// }
+Node *function() {
+    Node *node;
+    expect_kind(TK_IDENT);
+    node = new_node_ident(consume(), ND_FUNC_DEF);
+    expect_op("(");
+    consume();
+    if (at_kind(TK_IDENT)) {
+        node->args[0] = new_node_ident(consume(), ND_LVAR);
+        int i = 1;
+        while(!at_op(")")) {
+            expect_op(",");
+            consume();
+            node->args[i] = new_node_ident(consume(), ND_LVAR);
+            i++;
+        }
+        node->num_args = i;
+    } else {
+        node->num_args = 0;
+    }
+    expect_op(")");
+    consume();
+
+    expect_op("{");
+    consume();
+    for (int i = 0;!at_op("}");i++) {
+        node = append_stmt(node,  stmt(), i);
+    }
+    consume();
+    return node;
+}
 
 /*
 stmt = "return" expr ";"
@@ -354,7 +376,7 @@ Node *unary() {
 
 /*
  primary = "(" expr ")"
-         | ident ("(" (num ("," num)*)? ")")?
+         | ident ("(" (expr ("," expr)*)? ")")?
          | num
 */
 Node *primary() {
@@ -372,20 +394,21 @@ Node *primary() {
         if (at_op("(")) {
             consume();
             Node *node = new_node_ident(tok, ND_FUNC_CALL);
-            if (at_kind(TK_NUM)) {
-                node->args_call[0] = new_node_num(consume()->val);
+            if (!at_op(")")) {
+                node->args[0] = expr();
                 int i = 1;
                 while(!at_op(")")) {
                     expect_op(",");
                     consume();
-                    node->args_call[i] = new_node_num(consume()->val);
+                    node->args[i] = expr();
                     i++;
                 }
-                consume();
                 node->num_args = i;
             } else {
                 node->num_args = 0;
             }
+            expect_op(")");
+            consume();
             return node;
         }
         return new_node_ident(tok, ND_LVAR);

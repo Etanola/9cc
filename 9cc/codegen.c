@@ -5,8 +5,8 @@
 
 char *args_reg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
-// ローカル変数ノードに入っている値をraxにpush
-void gen_lval(Node *node) {
+// ローカル変数ノードに入っているアドレスをraxにpush
+void gen_lvar(Node *node) {
     if (node->kind != ND_LVAR)
         error("代入の左辺値が変数ではありません");
     
@@ -18,6 +18,37 @@ void gen_lval(Node *node) {
 static int count(void) {
     static int i = 1;
     return i++;
+}
+
+void gen_func(Node *node) {
+    if (node->kind != ND_FUNC_DEF) {
+        error("関数定義ではありません");
+    }
+
+    printf(".globl %s\n", node->str);
+    printf("%s:\n", node->str);
+
+    // プロローグ
+    printf("    push rbp\n");
+    printf("    mov rbp, rsp\n");
+    printf("    sub rsp, 208\n"); // 変数26個分の領域を確保
+
+    // 関数の引数の変数にレジスタから値を代入
+    for(int i = 0;i < node->num_args; i++) {
+        gen_lvar(node->args[i]);
+        printf("    pop rax\n");
+        printf("    mov rdi, %s\n", args_reg[i]);
+        printf("    mov [rax], rdi\n");
+    }
+
+    for (int i=0;node->stmt[i];i++) {
+        gen_stmt(node->stmt[i]);
+    }
+    
+    // エピローグ
+    printf("    mov rsp, rbp\n");
+    printf("    pop rbp\n");
+    printf("    ret\n");
 }
 
 // stmtは最終値をraxにpushしない
@@ -101,14 +132,14 @@ void gen_expr(Node *node) {
             return;
         }
         case ND_LVAR: {
-            gen_lval(node);
+            gen_lvar(node);
             printf("    pop rax\n");
             printf("    mov rax, [rax]\n");
             printf("    push rax\n");
             return;
         }
         case ND_ASSIGN: {
-            gen_lval(node->lhs);
+            gen_lvar(node->lhs);
             gen_expr(node->rhs);
 
             printf("    pop rdi\n");
@@ -119,11 +150,12 @@ void gen_expr(Node *node) {
         }
         case ND_FUNC_CALL: {
             int c = count();
-            for(int i = 0;i < node->num_args; i++) {
-                gen_expr(node->args_call[i]);
+            for (int i = 0;i < node->num_args;i++) {
+                gen_expr(node->args[i]);
             }
-            for(int i = 0;i < node->num_args; i++) {
-                printf("    pop %s\n", args_reg[i]);
+
+            for (int i = 0;i < node->num_args;i++) {
+                printf("    pop %s\n", args_reg[node->num_args - i - 1]);
             }
 
             // rspが16の倍数になるように調整
@@ -140,8 +172,8 @@ void gen_expr(Node *node) {
             printf("    sub rsp, 8\n");
             printf("    mov rax, 0\n");
             printf("    call %s\n", node->str);
-            printf("    push rax\n"); // callで呼んだ関数の返り値をpushする
             printf("    add rsp, 8\n");
+            printf("    push rax\n"); // callで呼んだ関数の返り値をpushする
             
             printf(".Lend%d:\n", c);
 
@@ -203,20 +235,7 @@ void gen_expr(Node *node) {
 
 void codegen() {
     printf(".intel_syntax noprefix\n");
-    printf(".globl main\n");
-    printf("main:\n");
-    
-    // プロローグ
-    printf("    push rbp\n");
-    printf("    mov rbp, rsp\n");
-    printf("    sub rsp, 208\n"); // 変数26個分の領域を確保
-
     for (int i=0; code[i]; i++) {
-        gen_stmt(code[i]);
+        gen_func(code[i]);
     }
-
-    // エピローグ
-    printf("    mov rsp, rbp\n");
-    printf("    pop rbp\n");
-    printf("    ret\n");
 }

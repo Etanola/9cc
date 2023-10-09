@@ -1,14 +1,21 @@
 #include <stdio.h>
 
-int foo() {
-    printf("OK!!!\n");
-    return 0;
+int ret3() {
+    return 3;
 }
 
-int foo2(int x, int y, int z) {
-    return x + y + z;
+int ret5() {
+    return 5;
 }
 
-int foo3(int x, int y, int z, int w) {
-    return x * y * z * w;
+int add(int x, int y) {
+    return x + y;
+}
+
+int sub(int x, int y) {
+    return x - y;
+}
+
+int addsix(int a, int b, int c, int d, int e, int f) {
+    return a + b + c + d + e + f;
 }

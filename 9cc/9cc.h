@@ -63,9 +63,8 @@ struct Node {
 
     Node *stmt[100]; // 複文を入れる
 
-    Node *args_call[5]; // ND_FUNC_CALLの引数
-    Node *args_def[5];  // ND_FUNC_DEFの引数
-    int num_args;
+    Node *args[6]; // ND_FUNCの引数
+    int num_args;  // 引数の個数
 
     int val;
     char *str;
@@ -73,11 +72,11 @@ struct Node {
 };
 
 
-// local variable struct
-typedef struct LVar LVar;
+// identifier link list struct
+typedef struct IdLink IdLink;
 
-struct LVar {
-    LVar *next;
+struct IdLink {
+    IdLink *next;
     Nodekind kind;
     char *name;
     int len;
@@ -92,7 +91,7 @@ extern Token *token;
 
 extern Node *code[100];
 
-extern LVar *idents;
+extern IdLink *idents;
 
 
 // user_input
