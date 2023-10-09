@@ -41,13 +41,9 @@ LVar *find_ident(Token *tok) {
     return NULL;
 }
 
-Node *new_node_ident(Token *tok, bool func) {
+Node *new_node_ident(Token *tok, Nodekind kind) {
     Node *node = calloc(1, sizeof(Node));
-    if (func) {
-        node->kind = ND_FUNC;
-    } else {
-        node->kind = ND_LVAR;
-    }
+    node->kind = kind;
     node->str = tok->str;
 
     LVar *ident = find_ident(tok);
@@ -141,7 +137,7 @@ void parse() {
     program();
 }
 
-// program = stmt*
+// program = function*
 void program() {
     int i = 0;
     while (!at_kind(TK_EOF)) {
@@ -149,6 +145,20 @@ void program() {
     }
     code[i] = NULL;
 }
+
+// function = ident ("(" (ident ("," ident)*)? ")") "{" stmt* "}"
+// Node *function() {
+//     Node *node;
+//     expect_kind(TK_IDENT);
+//     node = new_node_ident(consume(), true);
+//     expect_op("(");
+//     consume();
+//     if (at_kind(TK_IDENT)) {
+//         node->args_def;
+//     }
+//     expect_op(")");
+//     consume();
+// }
 
 /*
 stmt = "return" expr ";"
@@ -361,14 +371,14 @@ Node *primary() {
         Token *tok = consume();
         if (at_op("(")) {
             consume();
-            Node *node = new_node_ident(tok, true);
+            Node *node = new_node_ident(tok, ND_FUNC_CALL);
             if (at_kind(TK_NUM)) {
-                node->args[0] = new_node_num(consume()->val);
+                node->args_call[0] = new_node_num(consume()->val);
                 int i = 1;
                 while(!at_op(")")) {
                     expect_op(",");
                     consume();
-                    node->args[i] = new_node_num(consume()->val);
+                    node->args_call[i] = new_node_num(consume()->val);
                     i++;
                 }
                 consume();
@@ -378,7 +388,7 @@ Node *primary() {
             }
             return node;
         }
-        return new_node_ident(tok, false);
+        return new_node_ident(tok, ND_LVAR);
     }
 
     if (at_kind(TK_NUM)) {

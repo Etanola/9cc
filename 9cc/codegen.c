@@ -117,10 +117,10 @@ void gen_expr(Node *node) {
             printf("    push rdi\n");
             return;
         }
-        case ND_FUNC: {
+        case ND_FUNC_CALL: {
             int c = count();
             for(int i = 0;i < node->num_args; i++) {
-                gen_expr(node->args[i]);
+                gen_expr(node->args_call[i]);
             }
             for(int i = 0;i < node->num_args; i++) {
                 printf("    pop %s\n", args_reg[i]);

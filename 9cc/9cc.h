@@ -42,7 +42,8 @@ typedef enum {
     ND_WHILE,  // while
     ND_FOR,    // for
     ND_BLOCK,  // ブロック
-    ND_FUNC,   // 関数
+    ND_FUNC_CALL,   // 関数呼び出し
+    ND_FUNC_DEF,    // 関数定義
 } Nodekind;
 
 typedef struct Node Node;
@@ -62,7 +63,8 @@ struct Node {
 
     Node *stmt[100]; // 複文を入れる
 
-    Node *args[5]; // ND_FUNCの時の引数
+    Node *args_call[5]; // ND_FUNC_CALLの引数
+    Node *args_def[5];  // ND_FUNC_DEFの引数
     int num_args;
 
     int val;
@@ -105,6 +107,7 @@ Token *tokenize();
 // parse tree
 void parse();
 void program();
+Node *function();
 Node *stmt();
 Node *expr();
 Node *assign();
