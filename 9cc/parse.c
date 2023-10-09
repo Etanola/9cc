@@ -156,6 +156,7 @@ stmt = "return" expr ";"
      | "while" "(" expr ")" stmt
      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
      | "{" stmt* "}"
+     | expr? ";"
 */
 
 Node *stmt() {
@@ -233,10 +234,12 @@ Node *stmt() {
     return node;
 }
 
+// expr = assign
 Node *expr() {
     return assign();
 }
 
+// assign = equality ("=" assign)?
 Node *assign() {
     Node *node = equality();
     
@@ -247,6 +250,7 @@ Node *assign() {
     return node;
 }
 
+// equality = relational ("==" relational | "!=" relational)*
 Node *equality() {
     Node *node = relational();
 
@@ -263,6 +267,7 @@ Node *equality() {
     }
 }
 
+// relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 Node *relational() {
     Node *node = add();
 
@@ -285,6 +290,7 @@ Node *relational() {
     }
 }
 
+// add = mul ("+" mul | "-" mul)*
 Node *add() {
     Node *node = mul();
 
@@ -301,6 +307,7 @@ Node *add() {
     }
 }
 
+// mul = unary ("*" unary | "/" unary)*
 Node *mul() {
     Node *node = unary();
 
@@ -317,6 +324,7 @@ Node *mul() {
     }
 }
 
+// unary = ("+" | "-")* primary
 Node *unary() {
     int sign  = 1; // 1:+, 0:-
     while(at_op("+") || at_op("-")) {
@@ -334,6 +342,11 @@ Node *unary() {
     }
 }
 
+/*
+ primary = "(" expr ")"
+         | ident ("(" (num ("," num)*)? ")")?
+         | num
+*/
 Node *primary() {
     if (at_kind(TK_RESERVED) && at_op("(")) {
         consume();
@@ -347,19 +360,22 @@ Node *primary() {
     if (at_kind(TK_IDENT)) {
         Token *tok = consume();
         if (at_op("(")) {
+            consume();
             Node *node = new_node_ident(tok, true);
-            consume();
-            int i = 0;
-            while(!at_op(")")){
-                node->args[i] = new_node_num(consume()->val);
-                i++;
-                if(at_op(")")) break;
-                fprintf(stderr, "%d\n", i);
-                expect_op(",");
+            if (at_kind(TK_NUM)) {
+                node->args[0] = new_node_num(consume()->val);
+                int i = 1;
+                while(!at_op(")")) {
+                    expect_op(",");
+                    consume();
+                    node->args[i] = new_node_num(consume()->val);
+                    i++;
+                }
                 consume();
+                node->num_args = i;
+            } else {
+                node->num_args = 0;
             }
-            consume();
-            node->num_args = i;
             return node;
         }
         return new_node_ident(tok, false);
