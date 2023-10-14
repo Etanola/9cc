@@ -1,11 +1,11 @@
 services:
-  lowlayerstudy:
+  9cc:
     build: .
-    image: lowlayerstudy
-    container_name: lowlayerstudy
+    image: 9cc
+    container_name: 9cc
     restart: always
     ports:
       - 8008:8008
     volumes: 
-      - /mnt/c/Users/Etano/Documents/Lowlayer:/home
+      - /mnt/c/Users/Etano/Documents/9cc:/home
     tty: true
