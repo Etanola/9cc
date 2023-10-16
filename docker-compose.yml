@@ -7,5 +7,5 @@ services:
     ports:
       - 8008:8008
     volumes: 
-      - /mnt/c/Users/Etano/Documents/9cc:/home
+      - /mnt/c/Users/Etano/Documents/etano/lowlayer/9cc:/home
     tty: true
